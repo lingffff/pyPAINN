@@ -5,6 +5,8 @@ from runtime import *
 from utils import *
 from Ethernet_utils.frameHandler import FrameHandler
 
+import threading
+import time
 
 class PAIBoard(object):
     def __init__(self, baseDir: str, timestep: int):
@@ -24,6 +26,8 @@ class PAIBoard(object):
 
     def connect(self):
         self.ethernet.ethernetHandler.reconnect()
+        readingThread = threading.Thread(target=self.ethernet.read, name='ReadingThread')
+        readingThread.start()
 
     def __call__(self, x: Tensor) -> Tensor:
         # tensor2frame
@@ -35,7 +39,8 @@ class PAIBoard(object):
         self.ethernet.transformFrameFile("input") 
         self.ethernet.writeWithGapFrameNum("input", 10000, 1)     
         # receive from Ethernet
-        self.ethernet.read()
+        # self.ethernet.read()
+        time.sleep(0.1)  # wait for Ethernet # TODO: to be imporoved
         # frame2tensor
         dataFrames = getData(self.outputFramePath)
         outDataDict = decodeDataFrame(dataFrames, self.outDict, self.shapeDict, self.scaleDict, self.mapper, self._ts)
