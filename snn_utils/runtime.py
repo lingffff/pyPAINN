@@ -69,7 +69,8 @@ def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath):
         # for init frames
         initFrames = "\n".join(frameFormats[:frameNums[0]]) + "\n"
         base = frameNums[0]
-        f.write(initFrames)
+        writeInitFrames = initFrames[:65]
+        f.write(writeInitFrames)
 
         # for data frames
         for name in nameLists:
@@ -89,7 +90,6 @@ def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath):
                 spike = int(spike)
                 dataStr = "{:08b}\n".format(spike)
                 dataStrframes = dataStr.join(frameFormats[base : base + number]) 
-                
                 f.write(dataStrframes+dataStr)
                 base += number
         

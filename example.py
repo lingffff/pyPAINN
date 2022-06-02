@@ -16,12 +16,16 @@ if __name__ == '__main__':
                 transforms.ToTensor(),
                 normalize,
             ])
-    img = cv2.imread("./files/cat.png")
-    img_tensor = transform_cifar(img)
-    print(img_tensor.size())
-    # prepare: baseDir is from SNNToolChain
-    snn = PAIBoard(baseDir="./es", timestep=64)
-    snn.connect()
-    # inference
-    out = snn(img_tensor)
-    print(out)
+
+    loop = 100
+    for i in range(loop):
+        print(f"\n==> Test {i + 1}")
+        img = cv2.imread("./files/cat.png")
+        img_tensor = transform_cifar(img)
+        print(img_tensor.size())
+        # prepare: baseDir is from SNNToolChain
+        snn = PAIBoard(baseDir="./es", timestep=64)
+        snn.connect()
+        # inference
+        out = snn(img_tensor)
+        print(out)
