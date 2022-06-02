@@ -232,7 +232,7 @@ class FrameHandler():
     def read(self):
         while self.allowRead:
             readOutBytes = self.ethernetHandler.read()
-            with open('./files/out.txt','a') as outFile:
+            with open('./files/out.txt','w') as outFile:
                 readOutBytesNum = len(readOutBytes)
                 for i in range(0,readOutBytesNum,8):
                     for j in range(8):
