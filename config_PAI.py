@@ -12,7 +12,7 @@ def sendFrame(name: str):
     eth = FrameHandler()
     eth.ethernetHandler.reconnect()
     eth.transformFrameFile(name) 
-    eth.writeWithGapFrameNum(name, 10000, 1)  
+    eth.writeWithGapFrameNum(name, 1000, 1)
 
 
 if __name__ == '__main__':

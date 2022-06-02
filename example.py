@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import cv2
 
 from snn_utils.PAI_board import PAIBoard
-
+import time
 
 if __name__ == '__main__':
     # input
@@ -16,16 +16,23 @@ if __name__ == '__main__':
                 transforms.ToTensor(),
                 normalize,
             ])
+    classes = ('airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    # prepare: baseDir is from SNNToolChain
+    snn = PAIBoard(baseDir="./es", timestep=64)
+    snn.connect()
 
     loop = 100
+    t0 = time.time()
     for i in range(loop):
-        print(f"\n==> Test {i + 1}")
+        print(f"\n# Test {i + 1}")
+        # input image
         img = cv2.imread("./files/cat.png")
         img_tensor = transform_cifar(img)
         print(img_tensor.size())
-        # prepare: baseDir is from SNNToolChain
-        snn = PAIBoard(baseDir="./es", timestep=64)
-        snn.connect()
         # inference
         out = snn(img_tensor)
-        print(out)
+        pred = out.argmax().item()
+        print(out, f"=> {classes[pred]}")
+    t1 = time.time()
+    avg_time = (t1 - t0) / loop
+    print(f"\n### Avg time: {avg_time}s")
