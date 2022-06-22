@@ -61,6 +61,26 @@ def runPostNet(postNet, dataDict):
     else:
         return dataDict
 
+
+def fastEncodeDataFrameForSNN(dataDict, nameLists, filePath, formatsNumpy, initFrames, syncFrames):
+    with open(filePath,'w') as f:
+        f.write(initFrames)
+        for name in nameLists:
+            if hasattr(dataDict[name], "timesteps"):
+                data = dataDict[name].data
+                data = data.reshape(-1)
+                isSNN = True
+            else:
+                data = dataDict[name].reshape(-1)
+                isSNN = False
+            np_data = np.array(data)
+            index = np.nonzero(np_data)
+            frames = formatsNumpy[index]
+            for frame in frames:
+                f.write(frame + "00000001\n")
+        f.write(syncFrames)
+
+
 def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath, format):
 
     # with open(filePath,'w') as f:
@@ -108,7 +128,7 @@ def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath, form
     if (len(syncFrames) > 1):
         f.write(syncFrames)
     # print(t1 - t0)
-    # f.close()
+    f.close()
 
 def decodeDataFrame(dataFrames, outputDict, shapeDict, scaleDict, mapper, timeStep):
     dataDict = dict()

@@ -8,12 +8,17 @@ from Ethernet_utils.frameHandler import FrameHandler
 import time
 import numpy as np
 
+
 class PAIBoard(object):
     def __init__(self, baseDir: str, timestep: int):
         self._dir = baseDir
         self._ts = timestep
 
-        self.frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
+        frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
+        self.formatsNumpy = np.array(frameFormats[2:-1])
+        self.initFrames = "\n".join(frameFormats[:self.frameNums[0]]) + "\n"
+        self.syncFrames = frameFormats[-1] + "\n"
+
         self.outDict, self.shapeDict, self.scaleDict, self.mapper = loadOutputFormat(self._dir)
 
         auxNetDir = os.path.join(self._dir, "auxNet")
@@ -22,36 +27,26 @@ class PAIBoard(object):
         self.inputFramePath = os.path.join("./files", "input.txt") # TODO: remove files, directly 
         self.outputFramePath = os.path.join("./files", "out.txt")
 
-        # self.ethernet = FrameHandler()
+        self.ethernet = FrameHandler()
 
     def connect(self):
-        # self.ethernet.ethernetHandler.reconnect()
-        None
+        self.ethernet.ethernetHandler.reconnect()
 
     def __call__(self, x: Tensor) -> Tensor:
-        format = np.array(self.frameFormats[2:-1])
         # tensor2frame
-        t0 = time.time()
-        for i in range(10):
-            tt0 = time.time()
-            data = x.unsqueeze(0).expand(self._ts, *x.shape)
-            data = SpikeTensor(data, self._ts, 1)
-            dataDict = runPreNet(self.preNet, self.inputNames, *[data])
-            tt1 = time.time()
-            print(tt1 - tt0)
-            encodeDataFrame(dataDict, self.frameFormats, self.frameNums, self.inputNames, self.inputFramePath, format)
-        
-        t1 = time.time()
-        print((t1 - t0) / 10)
+        data = x.unsqueeze(0).expand(self._ts, *x.shape)
+        data = SpikeTensor(data, self._ts, 1)
+        dataDict = runPreNet(self.preNet, self.inputNames, *[data])
+        fastEncodeDataFrameForSNN(dataDict, self.inputNames, self.inputFramePath, self.formatsNumpy, self.initFrames, self.syncFrames)
         # send to Ethernet
-        # self.ethernet.transformFrameFile("input") 
-        # self.ethernet.writeWithGapFrameNum("input", 10000, 1)     
+        self.ethernet.transformFrameFile("input") 
+        self.ethernet.writeWithGapFrameNum("input", 10000, 0.1)     
         # receive from Ethernet
-        # self.ethernet.read()
+        self.ethernet.read()
         # frame2tensor
-        # dataFrames = getData(self.outputFramePath)
-        # outDataDict = decodeDataFrame(dataFrames, self.outDict, self.shapeDict, self.scaleDict, self.mapper, self._ts)
-        # # if one output
-        # for name in outDataDict.keys():
-        #     return outDataDict[name]
+        dataFrames = getData(self.outputFramePath)
+        outDataDict = decodeDataFrame(dataFrames, self.outDict, self.shapeDict, self.scaleDict, self.mapper, self._ts)
+        # if one output
+        for name in outDataDict.keys():
+            return outDataDict[name]
     
