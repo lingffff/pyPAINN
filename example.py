@@ -21,7 +21,7 @@ if __name__ == '__main__':
     snn = PAIBoard(baseDir="./es", timestep=64)
     snn.connect()
 
-    loop = 100
+    loop = 1
     t0 = time.time()
     for i in range(loop):
         print(f"\n# Test {i + 1}")
@@ -31,8 +31,8 @@ if __name__ == '__main__':
         print(img_tensor.size())
         # inference
         out = snn(img_tensor)
-        pred = out.argmax().item()
-        print(out, f"=> {classes[pred]}")
+        # pred = out.argmax().item()
+        # print(out, f"=> {classes[pred]}")
     t1 = time.time()
     avg_time = (t1 - t0) / loop
-    print(f"\n### Avg time: {avg_time}s")
+    # print(f"\n### Avg time: {avg_time}s")
