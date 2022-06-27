@@ -5,21 +5,25 @@ from runtime import *
 from utils import *
 from Ethernet_utils.frameHandler import FrameHandler
 
-import threading
 import time
+import numpy as np
 
 class PAIBoard(object):
     def __init__(self, baseDir: str, timestep: int):
         self._dir = baseDir
         self._ts = timestep
 
-        self.frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
+        frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
+        self.formatsNumpy = np.array(frameFormats[2:-1])
+        self.initFrames = "\n".join(frameFormats[:self.frameNums[0]]) + "\n"
+        self.syncFrames = frameFormats[-1] + "\n"
+
         self.outDict, self.shapeDict, self.scaleDict, self.mapper = loadOutputFormat(self._dir)
 
         auxNetDir = os.path.join(self._dir, "auxNet")
         self.preNet, self.postNet = loadAuxNet(auxNetDir)
 
-        self.inputFramePath = os.path.join("./files", "input.txt")
+        self.inputFramePath = os.path.join("./files", "input.txt") # TODO: remove files, directly 
         self.outputFramePath = os.path.join("./files", "out.txt")
 
         self.ethernet = FrameHandler()
@@ -34,7 +38,7 @@ class PAIBoard(object):
         data = x.unsqueeze(0).expand(self._ts, *x.shape)
         data = SpikeTensor(data, self._ts, 1)
         dataDict = runPreNet(self.preNet, self.inputNames, *[data])
-        encodeDataFrame(dataDict, self.frameFormats, self.frameNums, self.inputNames, self.inputFramePath)
+        fastEncodeDataFrameForSNN(dataDict, self.inputNames, self.inputFramePath, self.formatsNumpy, self.initFrames, self.syncFrames)
         # send to Ethernet
         self.ethernet.transformFrameFile("input") 
         self.ethernet.writeWithGapFrameNum("input", 10000, 1)     

@@ -61,18 +61,10 @@ def runPostNet(postNet, dataDict):
     else:
         return dataDict
 
-def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath):
 
+def fastEncodeDataFrameForSNN(dataDict, nameLists, filePath, formatsNumpy, initFrames, syncFrames):
     with open(filePath,'w') as f:
-        
-
-        # for init frames
-        initFrames = "\n".join(frameFormats[:frameNums[0]]) + "\n"
-        base = frameNums[0]
-        writeInitFrames = initFrames[:65]
-        f.write(writeInitFrames)
-
-        # for data frames
+        f.write(initFrames)
         for name in nameLists:
             if hasattr(dataDict[name], "timesteps"):
                 data = dataDict[name].data
@@ -81,23 +73,62 @@ def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath):
             else:
                 data = dataDict[name].reshape(-1)
                 isSNN = False
-            for spike, number in zip(data, frameNums[1:]):
-                if spike == 0:
-                    base += number
-                    continue
-                if spike < 0:
-                    spike += (1 << 8)
-                spike = int(spike)
-                dataStr = "{:08b}\n".format(spike)
-                dataStrframes = dataStr.join(frameFormats[base : base + number]) 
-                
-                f.write(dataStrframes+dataStr)
-                base += number
+            np_data = np.array(data)
+            index = np.nonzero(np_data)
+            frames = formatsNumpy[index]
+            for frame in frames:
+                f.write(frame + "00000001\n")
+        f.write(syncFrames)
+
+
+def encodeDataFrame(dataDict, frameFormats, frameNums, nameLists, filePath, format):
+
+    # with open(filePath,'w') as f:
+    f = open(filePath,'w')
+
+        # for init frames
+    initFrames = "\n".join(frameFormats[:frameNums[0]]) + "\n"
+    base = frameNums[0]
+    writeInitFrames = initFrames[:65]
+    f.write(writeInitFrames)
+
+    # format = np.array(frameFormats[2:-1])
+    # for data frames
+    for name in nameLists:
         
-         # for sync frames
-        syncFrames = "\n".join(frameFormats[base:]) + "\n"
-        if (len(syncFrames) > 1):
-            f.write(syncFrames)
+        if hasattr(dataDict[name], "timesteps"):
+            data = dataDict[name].data
+            data = data.reshape(-1)
+            isSNN = True
+        else:
+            data = dataDict[name].reshape(-1)
+            isSNN = False
+
+        np_data = np.array(data)
+        index = np.nonzero(np_data)
+        frames = format[index]
+        for frame in frames:
+            f.write(frame + "00000001\n")
+
+        # for spike, number in zip(data, frameNums[1:]):
+        #     if spike == 0:
+        #         base += number
+        #         continue
+        #     if spike < 0:
+        #         spike += (1 << 8)
+        #     spike = int(spike)
+        #     dataStr = "{:08b}\n".format(spike)
+        #     dataStrframes = dataStr.join(frameFormats[base : base + number]) 
+        #     f.write(dataStrframes+dataStr)
+        #     base += number
+
+    # for sync frames
+    # syncFrames = "\n".join(frameFormats[base:]) + "\n"
+    syncFrames = frameFormats[-1] + "\n"
+    if (len(syncFrames) > 1):
+        f.write(syncFrames)
+    # print(t1 - t0)
+    f.close()
 
 def decodeDataFrame(dataFrames, outputDict, shapeDict, scaleDict, mapper, timeStep):
     dataDict = dict()
