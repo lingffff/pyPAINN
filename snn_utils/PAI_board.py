@@ -40,7 +40,7 @@ class PAIBoard(object):
         fastEncodeDataFrameForSNN(dataDict, self.inputNames, self.inputFramePath, self.formatsNumpy, self.initFrames, self.syncFrames)
         # send to Ethernet
         self.ethernet.transformFrameFile("input") 
-        self.ethernet.writeWithGapFrameNum("input", 10000, 0.1)     
+        self.ethernet.writeWithGapFrameNum("input", 10000, 1)     
         # receive from Ethernet
         self.ethernet.read()
         # frame2tensor

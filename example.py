@@ -27,7 +27,8 @@ if __name__ == '__main__':
         print(f"\n# Test {i + 1}")
         # input image
         img = cv2.imread("./files/cat.png")
-        img_tensor = transform_cifar(img)
+        img_t = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_tensor = transform_cifar(img_t)
         print(img_tensor.size())
         # inference
         out = snn(img_tensor)

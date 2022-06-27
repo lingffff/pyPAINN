@@ -225,7 +225,7 @@ class FrameHandler():
                         return False	
                 currentFrameNo += frameNum
                 time.sleep(gap/1000) #ms
-            print('已写入%d帧' % (currentFrameNo))
+            # print('已写入%d帧' % (currentFrameNo))
             return True
         return True
 

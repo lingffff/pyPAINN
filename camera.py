@@ -14,8 +14,8 @@ if __name__ == '__main__':
     normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                         std=[0.2470, 0.2435, 0.2616])
     transform_cifar = transforms.Compose([
-                transforms.Resize(32),
                 transforms.ToTensor(),
+                transforms.Resize((32, 32)),
                 normalize,
             ])
     classes = ('airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
@@ -24,12 +24,12 @@ if __name__ == '__main__':
     snn.connect()
 
     cap = cv2.VideoCapture(0)
-    time.sleep(0.1)
-    while True:
+    while cap.isOpened():
         ret, img = cap.read()
         if not ret:
             break
-        img_tensor = transform_cifar(img)
+        img_t = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_tensor = transform_cifar(img_t)
         # inference
         out = snn(img_tensor)
         probs = torch.softmax(out, dim=0)
