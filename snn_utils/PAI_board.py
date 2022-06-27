@@ -7,6 +7,7 @@ from Ethernet_utils.frameHandler import FrameHandler
 
 import time
 import numpy as np
+import threading
 
 class PAIBoard(object):
     def __init__(self, baseDir: str, timestep: int):
@@ -14,7 +15,7 @@ class PAIBoard(object):
         self._ts = timestep
 
         frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
-        self.formatsNumpy = np.array(frameFormats[2:-1])
+        self.formatsNumpy = np.array(frameFormats[1:-1])
         self.initFrames = "\n".join(frameFormats[:self.frameNums[0]]) + "\n"
         self.syncFrames = frameFormats[-1] + "\n"
 
@@ -30,7 +31,7 @@ class PAIBoard(object):
 
     def connect(self):
         self.ethernet.ethernetHandler.reconnect()
-        readingThread = threading.Thread(target=self.ethernet.read, name='ReadingThread')
+        readingThread = threading.Thread(target=self.ethernet.read, name='ReadingThread', daemon=True)
         readingThread.start()
 
     def __call__(self, x: Tensor) -> Tensor:

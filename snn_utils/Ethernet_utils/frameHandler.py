@@ -230,13 +230,14 @@ class FrameHandler():
         return True
 
     def read(self):
-        readOutBytes = self.ethernetHandler.read()
-        with open('./files/out.txt','w') as outFile:
-            readOutBytesNum = len(readOutBytes)
-            for i in range(0,readOutBytesNum,8):
-                for j in range(8):
-                    outFile.write('{:0>8b}'.format(readOutBytes[i+j]))
-                outFile.write('\n')
+        while self.allowRead:
+            readOutBytes = self.ethernetHandler.read()
+            with open('./files/out.txt','w') as outFile:
+                readOutBytesNum = len(readOutBytes)
+                for i in range(0,readOutBytesNum,8):
+                    for j in range(8):
+                        outFile.write('{:0>8b}'.format(readOutBytes[i+j]))
+                    outFile.write('\n')
     r'''
     for j in range(3,-1,-1):
 	    outFile.write('{:0>8b}'.format(readOutBytes[i+j]))
