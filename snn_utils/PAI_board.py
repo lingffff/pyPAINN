@@ -14,7 +14,7 @@ class PAIBoard(object):
         self._ts = timestep
 
         frameFormats, self.frameNums, self.inputNames = loadInputFormats(self._dir)
-        self.formatsNumpy = np.array(frameFormats[2:-1])
+        self.formatsNumpy = np.array(frameFormats[1:-1])
         self.initFrames = "\n".join(frameFormats[:self.frameNums[0]]) + "\n"
         self.syncFrames = frameFormats[-1] + "\n"
 
@@ -30,9 +30,7 @@ class PAIBoard(object):
 
     def connect(self):
         self.ethernet.ethernetHandler.reconnect()
-        readingThread = threading.Thread(target=self.ethernet.read, name='ReadingThread')
-        readingThread.start()
-
+        
     def __call__(self, x: Tensor) -> Tensor:
         # tensor2frame
         data = x.unsqueeze(0).expand(self._ts, *x.shape)
@@ -43,8 +41,7 @@ class PAIBoard(object):
         self.ethernet.transformFrameFile("input") 
         self.ethernet.writeWithGapFrameNum("input", 10000, 1)     
         # receive from Ethernet
-        # self.ethernet.read()
-        time.sleep(0.1)  # wait for Ethernet # TODO: to be imporoved
+        self.ethernet.read()
         # frame2tensor
         dataFrames = getData(self.outputFramePath)
         outDataDict = decodeDataFrame(dataFrames, self.outDict, self.shapeDict, self.scaleDict, self.mapper, self._ts)
